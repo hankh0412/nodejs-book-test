@@ -1,23 +1,26 @@
 #!/usr/bin/env node
-const program = require('commander');
+const { program } = require('commander');
 const fs = require('fs');
 const path = require('path');
 const inquirer = require('inquirer');
 const chalk = require('chalk');
 
-const htmlTemplate = `<!DOCTYPE html>
-<html>
-<head>
-  <meta chart="utf-8" />
-  <title>Template</title>
-</head>
-<body>
-  <h1>Hello</h1>
-  <p>CLI</p>
-</body>
-</html>`;
+const htmlTemplate = `
+<!DOCTYPE html>
+  <html>
+  <head>
+    <meta chart="utf-8" />
+    <title>Template</title>
+  </head>
+  <body>
+    <h1>Hello</h1>
+    <p>CLI</p>
+  </body>
+</html>
+`;
 
-const routerTemplate = `const express = require('express');
+const routerTemplate = `
+const express = require('express');
 const router = express.Router();
  
 router.get('/', (req, res, next) => {
@@ -29,7 +32,8 @@ router.get('/', (req, res, next) => {
    }
 });
  
-module.exports = router;`;
+module.exports = router;
+`;
 
 const exist = (dir) => {
   try {
@@ -76,59 +80,53 @@ const makeTemplate = (type, name, directory) => {
   }
 };
 
-let triggered = false;
 program
   .version('0.0.1', '-v, --version')
-  .usage('[options]');
+  .name('cli');
 
 program
   .command('template <type>')
-  .usage('--name <name> --path [path]')
+  .usage('<type> --filename [filename] --path [path]')
   .description('템플릿을 생성합니다.')
   .alias('tmpl')
-  .option('-n, --name <name>', '파일명을 입력하세요.', 'index')
+  .option('-f, --filename [filename]', '파일명을 입력하세요.', 'index')
   .option('-d, --directory [path]', '생성 경로를 입력하세요', '.')
   .action((type, options) => {
-    makeTemplate(type, options.name, options.directory);
-    triggered = true;
+    makeTemplate(type, options.filename, options.directory);
   });
 
 program
-  .command('*', { noHelp: true })
-  .action(() => {
-    console.log('해당 명령어를 찾을 수 없습니다.');
-    program.help();
-    triggered = true;
-  });
-
-program
+  .action((cmd, args) => {
+    if (args) {
+      console.log(chalk.bold.red('해당 명령어를 찾을 수 없습니다.'));
+      program.help();
+    } else {
+      inquirer.prompt([{
+        type: 'list',
+        name: 'type',
+        message: '템플릿 종류를 선택하세요.',
+        choices: ['html', 'express-router'],
+      }, {
+        type: 'input',
+        name: 'name',
+        message: '파일의 이름을 입력하세요.',
+        default: 'index',
+      }, {
+        type: 'input',
+        name: 'directory',
+        message: '파일이 위치할 폴더의 경로를 입력하세요.',
+        default: '.',
+      }, {
+        type: 'confirm',
+        name: 'confirm',
+        message: '생성하시겠습니까?',
+      }])
+        .then((answers) => {
+          if (answers.confirm) {
+            makeTemplate(answers.type, answers.name, answers.directory);
+            console.log(chalk.rgb(128, 128, 128)('터미널을 종료합니다.'));
+          }
+        });
+    }
+  })
   .parse(process.argv);
-
-if (!triggered) {
-  inquirer.prompt([{
-    type: 'list',
-    name: 'type',
-    message: '템플릿 종류를 선택하세요.',
-    choices: ['html', 'express-router'],
-  }, {
-    type: 'input',
-    name: 'name',
-    message: '파일의 이름을 입력하세요.',
-    default: 'index',
-  }, {
-    type: 'input',
-    name: 'directory',
-    message: '파일이 위치할 폴더의 경로를 입력하세요.',
-    default: '.',
-  }, {
-    type: 'confirm',
-    name: 'confirm',
-    message: '생성하시겠습니까?',
-  }])
-    .then((answers) => {
-      if (answers.confirm) {
-        makeTemplate(answers.type, answers.name, answers.directory);
-        console.log(chalk.rgb(128, 128, 128)('터미널을 종료합니다.'));
-      }
-    });
-}
