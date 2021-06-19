@@ -1,7 +1,7 @@
 const {
   Worker, isMainThread, parentPort,
 } = require('worker_threads');
-
+console.log(isMainThread);
 if (isMainThread) { // 부모일 때
   const worker = new Worker(__filename);
   worker.on('message', message => console.log('from worker', message));
