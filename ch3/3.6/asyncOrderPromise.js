@@ -17,4 +17,4 @@ fs.readFile('./readme2.txt')
   .catch((err) => {
     console.error(err);
   });
-
+  console.log('test');
