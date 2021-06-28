@@ -7,4 +7,9 @@ router.get('/', (req, res) => {
   res.send('Hello, User');
 });
 
+router.get('/:id', (req,res) => {
+  console.log(req.params, req.query);
+  res.send('ok');
+});
+
 module.exports = router;
